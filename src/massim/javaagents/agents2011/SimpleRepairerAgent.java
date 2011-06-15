@@ -64,7 +64,7 @@ public class SimpleRepairerAgent extends Agent {
 				String ePos = p.getParameters().get(1).toString();
 				String eName = p.getParameters().get(0).toString();
 				if ( ePos.equals(position) && needyAgents.contains(eName) ) {
-					println("I am going to repair " + eName);
+					println("Estou indo reparar " + eName);
 					Mars2011Util.repairAction(eName);
 				}
 			}
