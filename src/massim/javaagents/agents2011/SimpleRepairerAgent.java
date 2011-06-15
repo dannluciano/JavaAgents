@@ -85,7 +85,7 @@ public class SimpleRepairerAgent extends Agent {
 				String ePos = p.getParameters().get(1).toString();
 				String eName = p.getParameters().get(0).toString();
 				if ( neighbors.contains(ePos) && needyAgents.contains(eName) ) {
-					println("I am going to repair " + eName + ". move to " + ePos +" first.");
+					println("Estou indo reparar" + eName + ". move to " + ePos +" first.");
 					Mars2011Util.gotoAction(ePos);
 				}
 			}
