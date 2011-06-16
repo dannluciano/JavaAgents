@@ -46,7 +46,7 @@ public class SimpleSentinelAgent extends Agent {
 		act = planRandomWalk();
 		if ( act != null ) return act;
 
-		return Mars2011Util.skipAction();
+		return Util.skipAction();
 		
 	}
 
@@ -89,7 +89,7 @@ public class SimpleSentinelAgent extends Agent {
 				println(p);
 			}
 			else if ( p.getName().equals("visibleEntity") ) {
-				LogicBelief b = Mars2011Util.perceptToBelief(p);
+				LogicBelief b = Util.perceptToBelief(p);
 				if ( containsBelief(b) == false ) {
 					addBelief(b);
 				}
@@ -97,7 +97,7 @@ public class SimpleSentinelAgent extends Agent {
 				}
 			}
 			else if ( p.getName().equals("visibleEdge") ) {
-				LogicBelief b = Mars2011Util.perceptToBelief(p);
+				LogicBelief b = Util.perceptToBelief(p);
 				if ( containsBelief(b) == false ) {
 					addBelief(b);
 				}
@@ -105,7 +105,7 @@ public class SimpleSentinelAgent extends Agent {
 				}
 			}
 			else if ( p.getName().equals("probedVertex") ) {
-				LogicBelief b = Mars2011Util.perceptToBelief(p);
+				LogicBelief b = Util.perceptToBelief(p);
 				if ( containsBelief(b) == false ) {
 					println("I perceive the value of a vertex that I have not known before");
 					addBelief(b);
@@ -116,7 +116,7 @@ public class SimpleSentinelAgent extends Agent {
 				}
 			}
 			else if ( p.getName().equals("surveyedEdge") ) {
-				LogicBelief b = Mars2011Util.perceptToBelief(p);
+				LogicBelief b = Util.perceptToBelief(p);
 				if ( containsBelief(b) == false ) {
 					println("I perceive the weight of an edge that I have not known before");
 					addBelief(b);
@@ -180,14 +180,14 @@ public class SimpleSentinelAgent extends Agent {
 		beliefs =  getAllBeliefs("energy");
 		if ( beliefs.size() == 0 ) {
 				println("strangely I do not know my energy");
-				return Mars2011Util.skipAction();
+				return Util.skipAction();
 		}		
 		int energy = new Integer(beliefs.getFirst().getParameters().firstElement()).intValue();
 
 		beliefs =  getAllBeliefs("maxEnergy");
 		if ( beliefs.size() == 0 ) {
 				println("strangely I do not know my maxEnergy");
-				return Mars2011Util.skipAction();
+				return Util.skipAction();
 		}		
 		int maxEnergy = new Integer(beliefs.getFirst().getParameters().firstElement()).intValue();
 
@@ -199,7 +199,7 @@ public class SimpleSentinelAgent extends Agent {
 			}
 			else {
 				println("recharging...");
-				return Mars2011Util.rechargeAction();
+				return Util.rechargeAction();
 			}
 		}
 		// go to recharge mode if necessary
@@ -207,7 +207,7 @@ public class SimpleSentinelAgent extends Agent {
 			if ( energy < maxEnergy / 3 ) {
 				println("I need to recharge");
 				goals.add(new LogicGoal("beAtFullCharge"));
-				return Mars2011Util.rechargeAction();
+				return Util.rechargeAction();
 			}
 		}	
 		
@@ -262,7 +262,7 @@ public class SimpleSentinelAgent extends Agent {
 		
 		if ( unsurveyedNum > 0 ) {
 			println("I will survey");
-			return Mars2011Util.surveyAction();
+			return Util.surveyAction();
 		}
 		
 		return null;
@@ -292,7 +292,7 @@ public class SimpleSentinelAgent extends Agent {
 		
 		println("I am going to buy a battery");
 		
-		return Mars2011Util.buyAction("battery");
+		return Util.buyAction("battery");
 		
 	}
 	
@@ -306,14 +306,14 @@ public class SimpleSentinelAgent extends Agent {
 		
 		if ( neighbors.size() == 0 ) {
 			println("strangely I do not know any neighbors");
-			return Mars2011Util.skipAction();
+			return Util.skipAction();
 		}
 		
 		// goto neighbors
 		Collections.shuffle(neighbors);
 		String neighbor = neighbors.firstElement();
 		println("I will go to " + neighbor);
-		return Mars2011Util.gotoAction(neighbor);
+		return Util.gotoAction(neighbor);
 		
 	}
 

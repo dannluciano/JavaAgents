@@ -11,9 +11,9 @@ import eis.iilang.Action;
 import eis.iilang.Percept;
 import massim.javaagents.Agent;
 
-public class SimpleSaboteurAgent extends Agent {
+public class SaboteurAgent extends Agent {
 
-	public SimpleSaboteurAgent(String name, String team) {
+	public SaboteurAgent(String name, String team) {
 		super(name, team);
 		// TODO Auto-generated constructor stub
 	}

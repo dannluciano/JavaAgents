@@ -7,15 +7,15 @@ import java.util.Vector;
 
 import apltk.interpreter.data.LogicBelief;
 import apltk.interpreter.data.LogicGoal;
+import apltk.interpreter.data.Message;
 import eis.iilang.Action;
 import eis.iilang.Percept;
 import massim.javaagents.Agent;
 
-public class SimpleSaboteurAgent extends Agent {
+public class SentinelAgent extends Agent {
 
-	public SimpleSaboteurAgent(String name, String team) {
+	public SentinelAgent(String name, String team) {
 		super(name, team);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -25,23 +25,52 @@ public class SimpleSaboteurAgent extends Agent {
 	@Override
 	public Action step() {
 
-		Action act = null;
-		
+		handleMessages();
 		handlePercepts();
-		
+
+		Action act = null;
+
 		// 1. recharging
 		act = planRecharge();
 		if ( act != null ) return act;
 		
-		// 2. fight if possible
-		act = planFight();
+		// 2. buying battery with a certain probability
+		act = planBuyBattery();
 		if ( act != null ) return act;
-		
-		// 3. random walking
+
+		// 3. surveying if necessary
+		act = planSurvey();
+		if ( act != null ) return act;
+				
+		// 4. (almost) random walking
 		act = planRandomWalk();
 		if ( act != null ) return act;
 
 		return Util.skipAction();
+		
+	}
+
+
+	private void handleMessages() {
+		
+		// handle messages... believe everything the others say
+		Collection<Message> messages = getMessages();
+		for ( Message msg : messages ) {
+			println(msg.sender + " told me " + msg.value);
+			String predicate = ((LogicBelief)msg.value).getPredicate();
+			if ( containsBelief((LogicBelief)msg.value) ) {
+				println("I already knew that");
+			}
+			else {
+				println("that was new to me");
+				if( predicate.equals("probedVertex") || predicate.equals("surveyedEdge") ) {
+					addBelief((LogicBelief)msg.value);
+					println("I will keep that in mind");
+					continue;
+				}
+				println("but I am not interested in that gibberish");
+			}
+		}
 		
 	}
 
@@ -62,9 +91,36 @@ public class SimpleSaboteurAgent extends Agent {
 			else if ( p.getName().equals("visibleEntity") ) {
 				LogicBelief b = Util.perceptToBelief(p);
 				if ( containsBelief(b) == false ) {
-					//println("I perceive an edge I have not known before");
 					addBelief(b);
-					//broadcastBelief(b);
+				}
+				else {
+				}
+			}
+			else if ( p.getName().equals("visibleEdge") ) {
+				LogicBelief b = Util.perceptToBelief(p);
+				if ( containsBelief(b) == false ) {
+					addBelief(b);
+				}
+				else {
+				}
+			}
+			else if ( p.getName().equals("probedVertex") ) {
+				LogicBelief b = Util.perceptToBelief(p);
+				if ( containsBelief(b) == false ) {
+					println("I perceive the value of a vertex that I have not known before");
+					addBelief(b);
+					broadcastBelief(b);
+				}
+				else {
+					//println("I already knew " + b);
+				}
+			}
+			else if ( p.getName().equals("surveyedEdge") ) {
+				LogicBelief b = Util.perceptToBelief(p);
+				if ( containsBelief(b) == false ) {
+					println("I perceive the weight of an edge that I have not known before");
+					addBelief(b);
+					broadcastBelief(b);
 				}
 				else {
 					//println("I already knew " + b);
@@ -93,6 +149,11 @@ public class SimpleSaboteurAgent extends Agent {
 				removeBeliefs("maxEnergy");
 				addBelief(new LogicBelief("maxEnergy",maxEnergy.toString()));
 			}
+			else if ( p.getName().equals("money") ) {
+				Integer money = new Integer(p.getParameters().get(0).toString());
+				removeBeliefs("money");
+				addBelief(new LogicBelief("money",money.toString()));
+			}
 			else if ( p.getName().equals("achievement") ) {
 				println("reached achievement " + p);
 			}
@@ -111,7 +172,7 @@ public class SimpleSaboteurAgent extends Agent {
 			}
 		}	
 	}
-	
+
 	private Action planRecharge() {
 
 		LinkedList<LogicBelief> beliefs = null;
@@ -153,69 +214,86 @@ public class SimpleSaboteurAgent extends Agent {
 		return null;
 		
 	}
-	
-	private Action planFight() {
-		
-		// get position
-		LinkedList<LogicBelief> beliefs = null;
-		beliefs =  getAllBeliefs("position");
-		if ( beliefs.size() == 0 ) {
-				println("strangely I do not know my position");
-				return Util.skipAction();
-		}
-		String position = beliefs.getFirst().getParameters().firstElement();
 
-		// if there is an enemy on the current position then attack or defend
-		Vector<String> enemies = new Vector<String>();
-		beliefs = getAllBeliefs("visibleEntity");
-		for ( LogicBelief b : beliefs ) {
-			String name = b.getParameters().get(0);
-			String pos = b.getParameters().get(1);
-			String team = b.getParameters().get(2);
-			if ( team.equals(getTeam()) ) continue;
-			if ( pos.equals(position) == false ) continue;
-			enemies.add(name);
-		}
-		if ( enemies.size() != 0 ) {
-			println("there are " + enemies.size() + " enemies at my current position");
-			if ( Math.round(Math.random()) % 2 == 0) {
-				println("I will parry");
-				return Util.parryAction();
-			}
-			else {
-				Collections.shuffle(enemies);
-				String enemy = enemies.firstElement();
-				println("I will attack " + enemy);
-				return Util.attackAction(enemy);
-			}
-		}
+	private Action planSurvey() {
+
+		println("I know " + getAllBeliefs("visibleEdge").size() + " visible edges");
+		println("I know " + getAllBeliefs("surveyedEdge").size() + " surveyed edges");
+
+		// get all neighbors
+		LinkedList<LogicBelief> visible = getAllBeliefs("visibleEdge");
+		LinkedList<LogicBelief> surveyed = getAllBeliefs("surveyedEdge");
+
+		String position = getAllBeliefs("position").get(0).getParameters().firstElement();
 		
-		// if there is an enemy on a neighboring vertex to there
-		beliefs = getAllBeliefs("neighbor");
-		Vector<String> neighbors = new Vector<String>();
-		for ( LogicBelief b : beliefs ) {
-			neighbors.add(b.getParameters().firstElement());
-		}
+		int unsurveyedNum = 0;
+		int adjacentNum = 0;
 		
-		Vector<String> vertices = new Vector<String>();
-		beliefs = getAllBeliefs("visibleEntity");
-		for ( LogicBelief b : beliefs ) {
-			//String name = b.getParameters().get(0);
-			String pos = b.getParameters().get(1);
-			String team = b.getParameters().get(2);
-			if ( team.equals(getTeam()) ) continue;
-			if ( neighbors.contains(pos) == false ) continue;
-			vertices.add(pos);
+		for ( LogicBelief v : visible ) {
+		
+			String vVertex0 = v.getParameters().elementAt(0);
+			String vVertex1 = v.getParameters().elementAt(1);
+
+			boolean adjacent = false;
+			if ( vVertex0.equals(position) || vVertex1.equals(position) )
+				adjacent = true;
+			
+			if ( adjacent == false) continue;
+			adjacentNum ++;
+			
+			boolean isSurveyed = false;
+			for ( LogicBelief s : surveyed ) {
+				String sVertex0 = s.getParameters().elementAt(0);
+				String sVertex1 = s.getParameters().elementAt(1);
+				if ( sVertex0.equals(vVertex0) &&  sVertex1.equals(vVertex1) ) {
+					isSurveyed = true;
+					break;
+				}
+				if ( sVertex0.equals(vVertex1) &&  sVertex1.equals(vVertex0) ) {
+					isSurveyed = true;
+					break;
+				}
+			}
+			if ( isSurveyed == false ) unsurveyedNum ++;
+			
 		}
-		if ( vertices.size() != 0 ) {
-			println("there are " + vertices.size() + " adjacent vertices with enemies");
-			Collections.shuffle(vertices);
-			String vertex = vertices.firstElement();
-			println("I will goto " + vertex);
-			return Util.gotoAction(vertex);
+
+		println("" + unsurveyedNum + " out of " + adjacentNum + " adjacent edges are unsurveyed");
+		
+		if ( unsurveyedNum > 0 ) {
+			println("I will survey");
+			return Util.surveyAction();
 		}
 		
 		return null;
+		
+	}
+	
+	/**
+	 * Buy a battery with a given probability
+	 * @return
+	 */
+	private Action planBuyBattery() {
+		
+		LinkedList<LogicBelief> beliefs = this.getAllBeliefs("money");
+		if ( beliefs.size() == 0 ) {
+			println("strangely I do not know our money.");
+			return null;
+		}
+		
+		LogicBelief moneyBelief = beliefs.get(0);
+		int money = new Integer(moneyBelief.getParameters().get(0)).intValue();
+		
+		if ( money < 10 ) {
+			println("we do not have enough money.");
+			return null;
+		}
+		println("we do have enough money.");
+		
+		println("I am going to buy a battery");
+		
+		return Util.buyAction("battery");
+		
 	}
 	
 	private Action planRandomWalk() {

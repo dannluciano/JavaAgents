@@ -164,10 +164,9 @@ public abstract class Agent {
 	 * Should be used for debugging purposes only.
 	 * @param obj
 	 */
-	protected final void println(Object obj) {
-		
-		System.out.println("Agent " + name + ": " + obj);
-		
+	
+	protected final void println(Object obj){
+		System.out.println("["+ this.getTeam() + ":" + this.getName() +"] --> \"" + obj + "\"");
 	}
 
 	/**
@@ -413,5 +412,4 @@ public abstract class Agent {
 	protected void clearGoals() {
 		goals.clear();
 	}
-
 }

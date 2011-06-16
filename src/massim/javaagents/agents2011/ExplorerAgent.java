@@ -12,9 +12,9 @@ import eis.iilang.Action;
 import eis.iilang.Percept;
 import massim.javaagents.Agent;
 
-public class SimpleExplorerAgent extends Agent {
+public class ExplorerAgent extends Agent {
 
-	public SimpleExplorerAgent(String name, String team) {
+	public ExplorerAgent(String name, String team) {
 		super(name, team);
 	}
 

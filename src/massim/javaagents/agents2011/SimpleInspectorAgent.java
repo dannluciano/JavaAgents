@@ -49,7 +49,7 @@ public class SimpleInspectorAgent extends Agent {
 		act = planRandomWalk();
 		if ( act != null ) return act;
 
-		return Mars2011Util.skipAction();
+		return Util.skipAction();
 		
 	}
 
@@ -80,7 +80,7 @@ public class SimpleInspectorAgent extends Agent {
 				println(p);
 			}
 			else if ( p.getName().equals("visibleEntity") ) {
-				LogicBelief b = Mars2011Util.perceptToBelief(p);
+				LogicBelief b = Util.perceptToBelief(p);
 				if ( containsBelief(b) == false ) {
 					//println("I perceive an edge I have not known before");
 					addBelief(b);
@@ -91,7 +91,7 @@ public class SimpleInspectorAgent extends Agent {
 				}
 			}
 			else if ( p.getName().equals("visibleEdge") ) {
-				LogicBelief b = Mars2011Util.perceptToBelief(p);
+				LogicBelief b = Util.perceptToBelief(p);
 				if ( containsBelief(b) == false ) {
 					//println("I perceive an edge I have not known before");
 					addBelief(b);
@@ -155,14 +155,14 @@ public class SimpleInspectorAgent extends Agent {
 		beliefs =  getAllBeliefs("energy");
 		if ( beliefs.size() == 0 ) {
 				println("strangely I do not know my energy");
-				return Mars2011Util.skipAction();
+				return Util.skipAction();
 		}		
 		int energy = new Integer(beliefs.getFirst().getParameters().firstElement()).intValue();
 
 		beliefs =  getAllBeliefs("maxEnergy");
 		if ( beliefs.size() == 0 ) {
 				println("strangely I do not know my maxEnergy");
-				return Mars2011Util.skipAction();
+				return Util.skipAction();
 		}		
 		int maxEnergy = new Integer(beliefs.getFirst().getParameters().firstElement()).intValue();
 
@@ -174,7 +174,7 @@ public class SimpleInspectorAgent extends Agent {
 			}
 			else {
 				println("recharging...");
-				return Mars2011Util.rechargeAction();
+				return Util.rechargeAction();
 			}
 		}
 		// go to recharge mode if necessary
@@ -182,7 +182,7 @@ public class SimpleInspectorAgent extends Agent {
 			if ( energy < maxEnergy / 3 ) {
 				println("I need to recharge");
 				goals.add(new LogicGoal("beAtFullCharge"));
-				return Mars2011Util.rechargeAction();
+				return Util.rechargeAction();
 			}
 		}	
 		
@@ -219,7 +219,7 @@ public class SimpleInspectorAgent extends Agent {
 		//}
 		println("I am going to buy a battery");
 		
-		return Mars2011Util.buyAction("battery");
+		return Util.buyAction("battery");
 		
 	}
 	
@@ -265,7 +265,7 @@ public class SimpleInspectorAgent extends Agent {
 		
 		if ( Math.random() < 0.5 ) {
 			println("I will inspect");
-			return Mars2011Util.inspectAction();
+			return Util.inspectAction();
 		}
 
 		println("I won't inspect");
@@ -283,14 +283,14 @@ public class SimpleInspectorAgent extends Agent {
 		
 		if ( neighbors.size() == 0 ) {
 			println("strangely I do not know any neighbors");
-			return Mars2011Util.skipAction();
+			return Util.skipAction();
 		}
 		
 		// goto neighbors
 		Collections.shuffle(neighbors);
 		String neighbor = neighbors.firstElement();
 		println("I will go to " + neighbor);
-		return Mars2011Util.gotoAction(neighbor);
+		return Util.gotoAction(neighbor);
 		
 	}
 

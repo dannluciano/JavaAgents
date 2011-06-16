@@ -7,37 +7,45 @@ import java.util.Vector;
 
 import apltk.interpreter.data.LogicBelief;
 import apltk.interpreter.data.LogicGoal;
+import apltk.interpreter.data.Message;
 import eis.iilang.Action;
 import eis.iilang.Percept;
 import massim.javaagents.Agent;
 
-public class SimpleSaboteurAgent extends Agent {
+public class InspectorAgent extends Agent {
 
-	public SimpleSaboteurAgent(String name, String team) {
+	public InspectorAgent(String name, String team) {
 		super(name, team);
 		// TODO Auto-generated constructor stub
 	}
 
 	@Override
 	public void handlePercept(Percept p) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	@Override
 	public Action step() {
 
-		Action act = null;
-		
+		handleMessages();
 		handlePercepts();
-		
+
+		Action act = null;
+
 		// 1. recharging
 		act = planRecharge();
 		if ( act != null ) return act;
 		
-		// 2. fight if possible
-		act = planFight();
+		// 2 buying battery
+		act = planBuyBattery();
+		if ( act != null ) return act;
+
+		// 3. inspecting if necessary
+		act = planInspect();
 		if ( act != null ) return act;
 		
-		// 3. random walking
+		// 4. (almost) random walking
 		act = planRandomWalk();
 		if ( act != null ) return act;
 
@@ -45,10 +53,22 @@ public class SimpleSaboteurAgent extends Agent {
 		
 	}
 
+
+	private void handleMessages() {
+		
+		// handle messages... believe everything the others say
+		Collection<Message> messages = getMessages();
+		for ( Message msg : messages ) {
+			println(msg.sender + " told me " + msg.value);
+			println("I do not care. I have more important things to do");
+		}
+		
+	}
+
 	private void handlePercepts() {
 
 		String position = null;
-		Vector<String> neighbors = new Vector<String>();
+		//Vector<String> neighbors = new Vector<String>();
 		
 		// check percepts
 		Collection<Percept> percepts = getAllPercepts();
@@ -69,6 +89,20 @@ public class SimpleSaboteurAgent extends Agent {
 				else {
 					//println("I already knew " + b);
 				}
+			}
+			else if ( p.getName().equals("visibleEdge") ) {
+				LogicBelief b = Util.perceptToBelief(p);
+				if ( containsBelief(b) == false ) {
+					//println("I perceive an edge I have not known before");
+					addBelief(b);
+					//broadcastBelief(b);
+				}
+				else {
+					//println("I already knew " + b);
+				}
+			}
+			else if ( p.getName().equals("inspectedEntity") ) {
+				println("I have perceived an inspected entity " + p);
 			}
 			else if ( p.getName().equals("health")) {
 				Integer health = new Integer(p.getParameters().get(0).toString());
@@ -93,8 +127,10 @@ public class SimpleSaboteurAgent extends Agent {
 				removeBeliefs("maxEnergy");
 				addBelief(new LogicBelief("maxEnergy",maxEnergy.toString()));
 			}
-			else if ( p.getName().equals("achievement") ) {
-				println("reached achievement " + p);
+			else if ( p.getName().equals("money") ) {
+				Integer money = new Integer(p.getParameters().get(0).toString());
+				removeBeliefs("money");
+				addBelief(new LogicBelief("money",money.toString()));
 			}
 		}
 		
@@ -111,7 +147,7 @@ public class SimpleSaboteurAgent extends Agent {
 			}
 		}	
 	}
-	
+
 	private Action planRecharge() {
 
 		LinkedList<LogicBelief> beliefs = null;
@@ -153,71 +189,90 @@ public class SimpleSaboteurAgent extends Agent {
 		return null;
 		
 	}
-	
-	private Action planFight() {
-		
-		// get position
-		LinkedList<LogicBelief> beliefs = null;
-		beliefs =  getAllBeliefs("position");
-		if ( beliefs.size() == 0 ) {
-				println("strangely I do not know my position");
-				return Util.skipAction();
-		}
-		String position = beliefs.getFirst().getParameters().firstElement();
 
-		// if there is an enemy on the current position then attack or defend
-		Vector<String> enemies = new Vector<String>();
-		beliefs = getAllBeliefs("visibleEntity");
-		for ( LogicBelief b : beliefs ) {
-			String name = b.getParameters().get(0);
-			String pos = b.getParameters().get(1);
-			String team = b.getParameters().get(2);
-			if ( team.equals(getTeam()) ) continue;
-			if ( pos.equals(position) == false ) continue;
-			enemies.add(name);
-		}
-		if ( enemies.size() != 0 ) {
-			println("there are " + enemies.size() + " enemies at my current position");
-			if ( Math.round(Math.random()) % 2 == 0) {
-				println("I will parry");
-				return Util.parryAction();
-			}
-			else {
-				Collections.shuffle(enemies);
-				String enemy = enemies.firstElement();
-				println("I will attack " + enemy);
-				return Util.attackAction(enemy);
-			}
+	
+	/**
+	 * Buy a battery with a given probability
+	 * @return
+	 */
+	private Action planBuyBattery() {
+		
+		LinkedList<LogicBelief> beliefs = this.getAllBeliefs("money");
+		if ( beliefs.size() == 0 ) {
+			println("strangely I do not know our money.");
+			return null;
 		}
 		
-		// if there is an enemy on a neighboring vertex to there
-		beliefs = getAllBeliefs("neighbor");
-		Vector<String> neighbors = new Vector<String>();
-		for ( LogicBelief b : beliefs ) {
-			neighbors.add(b.getParameters().firstElement());
-		}
+		LogicBelief moneyBelief = beliefs.get(0);
+		int money = new Integer(moneyBelief.getParameters().get(0)).intValue();
 		
-		Vector<String> vertices = new Vector<String>();
-		beliefs = getAllBeliefs("visibleEntity");
-		for ( LogicBelief b : beliefs ) {
-			//String name = b.getParameters().get(0);
-			String pos = b.getParameters().get(1);
-			String team = b.getParameters().get(2);
-			if ( team.equals(getTeam()) ) continue;
-			if ( neighbors.contains(pos) == false ) continue;
-			vertices.add(pos);
+		if ( money < 10 ) {
+			println("we do not have enough money.");
+			return null;
 		}
-		if ( vertices.size() != 0 ) {
-			println("there are " + vertices.size() + " adjacent vertices with enemies");
-			Collections.shuffle(vertices);
-			String vertex = vertices.firstElement();
-			println("I will goto " + vertex);
-			return Util.gotoAction(vertex);
-		}
+		println("we do have enough money.");
 		
-		return null;
+		//double r = Math.random();
+		//if ( r > 0.1 ) {
+		//	println("I am not going to buy a battery");
+		//	return null;
+		//}
+		println("I am going to buy a battery");
+		
+		return Util.buyAction("battery");
+		
 	}
 	
+	private Action planInspect() {
+
+		LinkedList<LogicBelief> beliefs = null;
+
+		// determine adjacent vertices including the current position
+		Vector<String> vertices = new Vector<String>();
+		beliefs =  getAllBeliefs("position");
+		String position = beliefs.getFirst().getParameters().firstElement();
+		vertices.add(position);
+		beliefs = getAllBeliefs("neighbor");
+		for ( LogicBelief b : beliefs ) {
+			vertices.add(b.getParameters().firstElement());
+		}
+		
+		int adjacentNum = 0;
+		
+		String myTeam = getTeam();
+		
+		LinkedList<LogicBelief> visible = getAllBeliefs("visibleEntity");
+		for ( LogicBelief v : visible ) {
+		
+			String pos = v.getParameters().get(1);
+			String team = v.getParameters().get(2);
+			
+			// ignore same team
+			if ( myTeam.equals(team) ) continue;
+			
+			// not adjacent
+			if ( vertices.contains(pos) == false ) continue;
+			adjacentNum ++;
+						
+		}
+
+		if ( adjacentNum == 0 ) {
+			println("there are no opponents to inspect");
+			return null;
+		}
+		
+		println("there are " + adjacentNum + " visible opponents that I could inspect");
+		
+		if ( Math.random() < 0.5 ) {
+			println("I will inspect");
+			return Util.inspectAction();
+		}
+
+		println("I won't inspect");
+		return null;
+		
+	}
+
 	private Action planRandomWalk() {
 
 		LinkedList<LogicBelief> beliefs = getAllBeliefs("neighbor");

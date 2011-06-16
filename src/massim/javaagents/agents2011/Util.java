@@ -16,9 +16,9 @@ import eis.iilang.Percept;
  * @author tristanbehrens
  *
  */
-public class Mars2011Util {
+public class Util {
 
-	private Mars2011Util() {
+	private Util() {
 		throw new AssertionError("do not instantiate!");
 	}
 	

@@ -10,11 +10,11 @@ import eis.iilang.Action;
 import eis.iilang.Percept;
 import massim.javaagents.Agent;
 
-public class SimpleRepairerAgent extends Agent {
+public class RepairerAgent extends Agent {
 
 	int rechargeSteps = 0;
 	
-	public SimpleRepairerAgent(String name, String team) {
+	public RepairerAgent(String name, String team) {
 		super(name, team);
 	}
 
