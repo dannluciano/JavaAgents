@@ -208,7 +208,7 @@ public class SimpleExplorerAgent extends Agent {
 		}
 		// go to recharge mode if necessary
 		else {
-			if ( energy < maxEnergy / 3 ) {
+			if ( energy < maxEnergy / 4 ) { 
 				println("I need to recharge");
 				goals.add(new LogicGoal("beAtFullCharge"));
 				return Mars2011Util.rechargeAction();
