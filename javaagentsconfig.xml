@@ -10,7 +10,7 @@
     <agent name="agentA7" entity="connectionA7" class="massim.javaagents.agents2011.SentinelAgent" team="A"/>
     <agent name="agentA8" entity="connectionA8" class="massim.javaagents.agents2011.SentinelAgent" team="A"/>
     <agent name="agentA9" entity="connectionA9" class="massim.javaagents.agents2011.InspectorAgent" team="A"/>
-    <agent name="agentA10" entity="connectionA10" class="massim.javaagents.agents2011.IspectorAgent" team="A"/>
+    <agent name="agentA10" entity="connectionA10" class="massim.javaagents.agents2011.InspectorAgent" team="A"/>
     <agent name="agentB1" entity="connectionB1" class="massim.javaagents.agents2011.SimpleExplorerAgent" team="B"/>
     <agent name="agentB2" entity="connectionB2" class="massim.javaagents.agents2011.SimpleExplorerAgent" team="B"/>
     <agent name="agentB3" entity="connectionB3" class="massim.javaagents.agents2011.SimpleRepairerAgent" team="B"/>
