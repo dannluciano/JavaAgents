@@ -1,5 +1,5 @@
 package massim.javaagents.agents2011;
-//isaac
+
 
 import java.util.Collection;
 import java.util.Collections;
@@ -15,7 +15,7 @@ import massim.javaagents.Agent;
 
 public class ExplorerAgent extends Agent {
 
-	public ExplorerAgent(String name, String team) {
+	public ExplorerAgent(String name, String team) { 
 		super(name, team);
 	}
 
@@ -209,7 +209,7 @@ public class ExplorerAgent extends Agent {
 		}
 		// go to recharge mode if necessary
 		else {
-			if ( energy < maxEnergy / 3 ) {
+			if ( energy < maxEnergy / 4 ) {
 				println("I need to recharge");
 				goals.add(new LogicGoal("beAtFullCharge"));
 				return Util.rechargeAction();
