@@ -356,7 +356,7 @@ public class AgentsInterpreter implements Interpreter,AgentListener,EnvironmentL
 		}
 		
 		// print mental state
-		boolean verbose = false; // TODO move to config
+		boolean verbose = true; // TODO move to config
 		if ( verbose == true ) {
 			for ( Agent ag : agents.values() ) {
 				System.out.println("Agent \"" + ag.getName() + "\"");
@@ -369,7 +369,7 @@ public class AgentsInterpreter implements Interpreter,AgentListener,EnvironmentL
 		boolean delay = true; // TODO move to config
 		if ( delay == true) {
 			try {
-				Thread.sleep(100);
+				Thread.sleep(60*1000);
 			} catch (InterruptedException e) {
 			}
 		}
