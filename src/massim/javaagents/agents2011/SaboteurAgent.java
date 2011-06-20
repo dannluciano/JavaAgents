@@ -143,7 +143,7 @@ public class SaboteurAgent extends Agent {
 		}
 		// go to recharge mode if necessary
 		else {
-			if ( energy < maxEnergy / 3 ) {
+			if ( energy < maxEnergy / 4 ) {
 				println("I need to recharge");
 				goals.add(new LogicGoal("beAtFullCharge"));
 				return Util.rechargeAction();
@@ -179,14 +179,21 @@ public class SaboteurAgent extends Agent {
 		if ( enemies.size() != 0 ) {
 			println("there are " + enemies.size() + " enemies at my current position");
 			if ( Math.round(Math.random()) % 2 == 0) {
-				println("I will parry");
-				return Util.parryAction();
-			}
-			else {
+				
 				Collections.shuffle(enemies);
 				String enemy = enemies.firstElement();
 				println("I will attack " + enemy);
 				return Util.attackAction(enemy);
+				//println("I will parry");
+				//return Util.parryAction();
+			}
+			else {
+				//Collections.shuffle(enemies);
+				//String enemy = enemies.firstElement();
+				//println("I will attack " + enemy);
+				//return Util.attackAction(enemy);
+				println("I will parry");
+				return Util.parryAction();
 			}
 		}
 		

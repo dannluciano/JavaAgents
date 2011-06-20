@@ -209,7 +209,7 @@ public class ExplorerAgent extends Agent {
 		}
 		// go to recharge mode if necessary
 		else {
-			if ( energy < maxEnergy / 4 ) {
+			if ( energy < maxEnergy / 5 ) {
 				println("I need to recharge");
 				goals.add(new LogicGoal("beAtFullCharge"));
 				return Util.rechargeAction();
@@ -267,7 +267,7 @@ public class ExplorerAgent extends Agent {
 		if ( unprobed.size() != 0 ) {
 			println("some of my neighbors are unprobed.");
 			Collections.shuffle(unprobed);
-			String neighbor = unprobed.firstElement();
+			String neighbor = unprobed.firstElement(); //escolhe o vizinho a ser sondado, seria interessante escolher alguem do time oposto já.
 			println("I will go to " + neighbor);
 			return Util.gotoAction(neighbor);
 		}
@@ -348,7 +348,7 @@ public class ExplorerAgent extends Agent {
 		LogicBelief moneyBelief = beliefs.get(0);
 		int money = new Integer(moneyBelief.getParameters().get(0)).intValue();
 		
-		if ( money < 10 ) {
+		if ( money < 5 ) {
 			println("we do not have enough money.");
 			return null;
 		}
@@ -371,6 +371,7 @@ public class ExplorerAgent extends Agent {
 		Vector<String> neighbors = new Vector<String>();
 		for ( LogicBelief b : beliefs ) {
 			neighbors.add(b.getParameters().firstElement());
+			
 		}
 		
 		if ( neighbors.size() == 0 ) {

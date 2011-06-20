@@ -2,9 +2,11 @@ package massim.javaagents.agents2011;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.Vector;
 
 import apltk.interpreter.data.LogicBelief;
+import apltk.interpreter.data.LogicGoal;
 import apltk.interpreter.data.Message;
 import eis.iilang.Action;
 import eis.iilang.Percept;
@@ -24,23 +26,31 @@ public class RepairerAgent extends Agent {
 
 	@Override
 	public Action step() {
+		
+		Action act = null;
+		
+		act = planRecharge();
+		if ( act != null ) return act;
 
-		if ( rechargeSteps > 0 ) {
+		
+		/*if ( rechargeSteps > 0 ) {
 			rechargeSteps --;
 			println("recharging...");
 			return Util.skipAction();
-		}
+			//return Util.rechargeAction();
+		}*/
 		
 		Collection<Message> messages = getMessages();
 		Vector<String> needyAgents = new Vector<String>();
 		for ( Message msg : messages ) {
-			if (((LogicBelief)msg.value).getPredicate().equals("iAmDisabled"))
 				needyAgents.add(msg.sender);
 		}
 		
 		if ( needyAgents.size() == 0 ) {
 			println("nothing for me to do");
 			return Util.skipAction();
+			//goals.add(new LogicGoal("beAtFullCharge"));
+			//return Util.rechargeAction();
 		}
 
 		println("some poor souls need my help " + needyAgents);
@@ -75,7 +85,8 @@ public class RepairerAgent extends Agent {
 		for ( Percept p : percepts ) {
 			if ( p.getName().equals("visibleEdge") ) {
 				String vertex1 = p.getParameters().get(0).toString();
-				String vertex2 = p.getParameters().get(1).toString();
+				String vertex2 = p.getParameters().
+				get(1).toString();
 				if ( vertex1.equals(position) ) neighbors.add(vertex2);
 				if ( vertex2.equals(position) ) neighbors.add(vertex1);
 			}
@@ -99,4 +110,46 @@ public class RepairerAgent extends Agent {
 
 	}
 
+	private Action planRecharge() {
+
+		LinkedList<LogicBelief> beliefs = null;
+		
+		beliefs =  getAllBeliefs("energy");
+		if ( beliefs.size() == 0 ) {
+				println("strangely I do not know my energy");
+				return Util.skipAction();
+		}		
+		int energy = new Integer(beliefs.getFirst().getParameters().firstElement()).intValue();
+
+		beliefs =  getAllBeliefs("maxEnergy");
+		if ( beliefs.size() == 0 ) {
+				println("strangely I do not know my maxEnergy");
+				return Util.skipAction();
+		}		
+		int maxEnergy = new Integer(beliefs.getFirst().getParameters().firstElement()).intValue();
+
+		// if has the goal of being recharged...
+		if ( goals.contains(new LogicGoal("beAtFullCharge")) ) {
+			if ( maxEnergy == energy ) {
+				println("I can stop recharging. I am at full charge");
+				removeGoals("beAtFullCharge");
+			}
+			else {
+				println("recharging...");
+				return Util.rechargeAction();
+			}
+		}
+		// go to recharge mode if necessary
+		else {
+			if ( energy < maxEnergy / 4 ) {
+				println("I need to recharge");
+				goals.add(new LogicGoal("beAtFullCharge"));
+				return Util.rechargeAction();
+			}
+		}	
+		
+		return null;
+		
+	}
+	
 }
