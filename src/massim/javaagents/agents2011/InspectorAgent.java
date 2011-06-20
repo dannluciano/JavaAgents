@@ -107,8 +107,9 @@ public class InspectorAgent extends Agent {
 			else if ( p.getName().equals("health")) {
 				Integer health = new Integer(p.getParameters().get(0).toString());
 				println("my health is " +health );
-				if ( health.intValue() == 0 ) {
-					println("my health is zero. asking for help");
+				if ( health.intValue() <= 1 ) {
+					println("my health is low. asking for help");
+					//seria interessante mandar mensagem para o reparador do proprio time
 					broadcastBelief(new LogicBelief("iAmDisabled"));
 				}
 			}
@@ -179,7 +180,7 @@ public class InspectorAgent extends Agent {
 		}
 		// go to recharge mode if necessary
 		else {
-			if ( energy < maxEnergy / 3 ) {
+			if ( energy < maxEnergy / 5 ) {
 				println("I need to recharge");
 				goals.add(new LogicGoal("beAtFullCharge"));
 				return Util.rechargeAction();
@@ -206,7 +207,7 @@ public class InspectorAgent extends Agent {
 		LogicBelief moneyBelief = beliefs.get(0);
 		int money = new Integer(moneyBelief.getParameters().get(0)).intValue();
 		
-		if ( money < 10 ) {
+		if ( money < 5 ) {
 			println("we do not have enough money.");
 			return null;
 		}
@@ -263,7 +264,7 @@ public class InspectorAgent extends Agent {
 		
 		println("there are " + adjacentNum + " visible opponents that I could inspect");
 		
-		if ( Math.random() < 0.5 ) {
+		if ( Math.random() < 2 ) {
 			println("I will inspect");
 			return Util.inspectAction();
 		}
