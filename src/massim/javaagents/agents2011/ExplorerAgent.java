@@ -137,12 +137,14 @@ public class ExplorerAgent extends Agent {
 				if ( health.intValue() == 0 ) {
 					println("my health is zero. asking for help");
 					broadcastBelief(new LogicBelief("iAmDisabled"));
+						
 				}
 			}
 			else if ( p.getName().equals("position") ) {
 				position = p.getParameters().get(0).toString();
 				removeBeliefs("position");
 				addBelief(new LogicBelief("position",position));
+				
 			}
 			else if ( p.getName().equals("energy") ) {
 				Integer energy = new Integer(p.getParameters().get(0).toString());
@@ -374,7 +376,7 @@ public class ExplorerAgent extends Agent {
 			
 		}
 		
-		if ( neighbors.size() == 0 ) {
+		if ( neighbors.size() == 0 || beliefs.contains("iAmDisabled")) {
 			println("strangely I do not know any neighbors");
 			return Util.skipAction();
 		}
