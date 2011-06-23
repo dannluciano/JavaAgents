@@ -127,6 +127,10 @@ public class Util {
 		
 	}
 	
+	static LogicBelief createBelief(String predicate,String parameters){
+		return new LogicBelief(predicate,parameters);
+	}
+	
 	/**
 	 * Maps a percept to a belief.
 	 * @param percept
