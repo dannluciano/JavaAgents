@@ -29,17 +29,18 @@ public class SaboteurAgent extends Agent {
 		
 		handlePercepts();
 		
-		// 1. fight if possible ou defender
-		act = planFight();
-		if ( act != null ) return act;
+		// 1. recharging
 		
-		
-		// 2. recharging
 		act = planRecharge(); 
 		if ( act != null ) return act;
 		
-	    // 3. random walking
-		act = planRandomWalk();
+		// 2. fight if possible ou defender
+		
+		act = planFight();
+		if ( act != null ) return act;
+
+		// 3. random walking
+		/*act = planRandomWalk();
 		if ( act != null ) return act;
 		
 		// 4. buying battery with a certain probability
@@ -54,7 +55,7 @@ public class SaboteurAgent extends Agent {
 		//act = planSurvey();
 		//if ( act != null ) return act;
 		
-				
+			*/	
 		return Util.skipAction();
 		
 	}
