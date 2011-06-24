@@ -2,6 +2,8 @@ package massim.javaagents;
 
 import java.io.IOException;
 
+import massim.javaagents.agents2011.Util;
+
 import eis.EILoader;
 import eis.EnvironmentInterfaceStandard;
 import eis.exceptions.ManagementException;
@@ -15,7 +17,7 @@ import eis.exceptions.ManagementException;
 public class App {
     
 	public static void main( String[] args ) {
-		
+		Util util=new Util();
 		//  instantiate interpreter
 		System.out.println("PHASE 1: INSTANTIATING INTERPRETER");
 		AgentsInterpreter interpreter = null;
@@ -34,6 +36,7 @@ public class App {
 			ei = EILoader.fromClassName("massim.eismassim.EnvironmentInterface");
 		} catch (IOException e) {
 			e.printStackTrace();
+			util.log(e.getMessage());
 			System.exit(0);
 		}
 
@@ -44,6 +47,7 @@ public class App {
 			ei.start();
 		} catch (ManagementException e) {
 			e.printStackTrace();
+			util.log(e.getMessage());
 		}
 		System.out.println("environment-interface started");
 

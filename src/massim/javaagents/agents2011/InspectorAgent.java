@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Vector;
 
+import apltk.interpreter.data.Belief;
 import apltk.interpreter.data.LogicBelief;
 import apltk.interpreter.data.LogicGoal;
 import apltk.interpreter.data.Message;
@@ -22,7 +23,7 @@ public class InspectorAgent extends Agent {
 	@Override
 	public void handlePercept(Percept p) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -35,41 +36,44 @@ public class InspectorAgent extends Agent {
 
 		// 1. recharging
 		act = planRecharge();
-		if ( act != null ) return act;
-		
-		// 2 buying battery
-		act = planBuyBattery();
-		if ( act != null ) return act;
+		if ( act != null ) return act;	
 
 		// 3. inspecting if necessary
 		act = planInspect();
 		if ( act != null ) return act;
 		
+		act=planSurvey();
+		if(act!=null) return act;
+		
+		// 2 buying battery
+		act = planBuyBattery();
+		if ( act != null ) return act;
+
 		// 4. (almost) random walking
 		act = planRandomWalk();
 		if ( act != null ) return act;
 
 		return Util.skipAction();
-		
+
 	}
 
 
 	private void handleMessages() {
-		
+
 		// handle messages... believe everything the others say
 		Collection<Message> messages = getMessages();
 		for ( Message msg : messages ) {
 			println(msg.sender + " told me " + msg.value);
 			println("I do not care. I have more important things to do");
 		}
-		
+
 	}
 
 	private void handlePercepts() {
 
 		String position = null;
 		//Vector<String> neighbors = new Vector<String>();
-		
+
 		// check percepts
 		Collection<Percept> percepts = getAllPercepts();
 		//if ( gatherSpecimens ) processSpecimens(percepts);
@@ -134,7 +138,7 @@ public class InspectorAgent extends Agent {
 				addBelief(new LogicBelief("money",money.toString()));
 			}
 		}
-		
+
 		// again for checking neighbors
 		this.removeBeliefs("neighbor");
 		for ( Percept p : percepts ) {
@@ -152,18 +156,18 @@ public class InspectorAgent extends Agent {
 	private Action planRecharge() {
 
 		LinkedList<LogicBelief> beliefs = null;
-		
+
 		beliefs =  getAllBeliefs("energy");
 		if ( beliefs.size() == 0 ) {
-				println("strangely I do not know my energy");
-				return Util.skipAction();
+			println("strangely I do not know my energy");
+			return Util.skipAction();
 		}		
 		int energy = new Integer(beliefs.getFirst().getParameters().firstElement()).intValue();
 
 		beliefs =  getAllBeliefs("maxEnergy");
 		if ( beliefs.size() == 0 ) {
-				println("strangely I do not know my maxEnergy");
-				return Util.skipAction();
+			println("strangely I do not know my maxEnergy");
+			return Util.skipAction();
 		}		
 		int maxEnergy = new Integer(beliefs.getFirst().getParameters().firstElement()).intValue();
 
@@ -186,47 +190,48 @@ public class InspectorAgent extends Agent {
 				return Util.rechargeAction();
 			}
 		}	
-		
+
 		return null;
-		
+
 	}
 
-	
+
 	/**
 	 * Buy a battery with a given probability
 	 * @return
 	 */
 	private Action planBuyBattery() {
-		
+
 		LinkedList<LogicBelief> beliefs = this.getAllBeliefs("money");
 		if ( beliefs.size() == 0 ) {
 			println("strangely I do not know our money.");
 			return null;
 		}
-		
+
 		LogicBelief moneyBelief = beliefs.get(0);
 		int money = new Integer(moneyBelief.getParameters().get(0)).intValue();
-		
+
 		if ( money < 5 ) {
 			println("we do not have enough money.");
 			return null;
 		}
 		println("we do have enough money.");
-		
+
 		//double r = Math.random();
 		//if ( r > 0.1 ) {
 		//	println("I am not going to buy a battery");
 		//	return null;
 		//}
 		println("I am going to buy a battery");
-		
+
 		return Util.buyAction("battery");
-		
+
 	}
-	
+
 	private Action planInspect() {
 
 		LinkedList<LogicBelief> beliefs = null;
+		LinkedList<LogicBelief> enemies=null;
 
 		// determine adjacent vertices including the current position
 		Vector<String> vertices = new Vector<String>();
@@ -237,39 +242,94 @@ public class InspectorAgent extends Agent {
 		for ( LogicBelief b : beliefs ) {
 			vertices.add(b.getParameters().firstElement());
 		}
-		
+
 		int adjacentNum = 0;
-		
+
 		String myTeam = getTeam();
-		
+
 		LinkedList<LogicBelief> visible = getAllBeliefs("visibleEntity");
+
 		for ( LogicBelief v : visible ) {
-		
+
 			String pos = v.getParameters().get(1);
 			String team = v.getParameters().get(2);
-			
+
 			// ignore same team
 			if ( myTeam.equals(team) ) continue;
-			
+
 			// not adjacent
 			if ( vertices.contains(pos) == false ) continue;
-			adjacentNum ++;
-						
+			adjacentNum ++;			
+			enemies.add(Util.createBelief("enemy",pos));
+
 		}
 
 		if ( adjacentNum == 0 ) {
 			println("there are no opponents to inspect");
 			return null;
 		}
-		
+
 		println("there are " + adjacentNum + " visible opponents that I could inspect");
+		/*Como tem inimigos no vertice, eu chamarei os sabotadores para atacar
+		 O sabotador tem que ver no handleBeliefs se ele tiver uma crença de inimigo, ele deve atacar*/
+		if(enemies!=null){
+			for(LogicBelief enemy: enemies)
+				broadcastBelief(enemy);
+		}
+		println("I will inspect");
+		return Util.inspectAction();
+	}
+	
+	private Action planSurvey() {
+
+		println("I know " + getAllBeliefs("visibleEdge").size() + " visible edges");
+		println("I know " + getAllBeliefs("surveyedEdge").size() + " surveyed edges");
+
+		// get all neighbors
+		LinkedList<LogicBelief> visible = getAllBeliefs("visibleEdge");
+		LinkedList<LogicBelief> surveyed = getAllBeliefs("surveyedEdge");
+
+		String position = getAllBeliefs("position").get(0).getParameters().firstElement();
 		
-		if ( Math.random() < 2 ) {
-			println("I will inspect");
-			return Util.inspectAction();
+		int unsurveyedNum = 0;
+		int adjacentNum = 0;
+		
+		for ( LogicBelief v : visible ) {
+		
+			String vVertex0 = v.getParameters().elementAt(0);
+			String vVertex1 = v.getParameters().elementAt(1);
+
+			boolean adjacent = false;
+			if ( vVertex0.equals(position) || vVertex1.equals(position) )
+				adjacent = true;
+			
+			if ( adjacent == false) continue;
+			adjacentNum ++;
+			
+			boolean isSurveyed = false;
+			for ( LogicBelief s : surveyed ) {
+				String sVertex0 = s.getParameters().elementAt(0);
+				String sVertex1 = s.getParameters().elementAt(1);
+				if ( sVertex0.equals(vVertex0) &&  sVertex1.equals(vVertex1) ) {
+					isSurveyed = true;
+					break;
+				}
+				if ( sVertex0.equals(vVertex1) &&  sVertex1.equals(vVertex0) ) {
+					isSurveyed = true;
+					break;
+				}
+			}
+			if ( isSurveyed == false ) unsurveyedNum ++;
+			
 		}
 
-		println("I won't inspect");
+		println("" + unsurveyedNum + " out of " + adjacentNum + " adjacent edges are unsurveyed");
+		
+		if ( unsurveyedNum > 0 ) {
+			println("I will survey");
+			return Util.surveyAction();
+		}
+		
 		return null;
 		
 	}
@@ -281,18 +341,18 @@ public class InspectorAgent extends Agent {
 		for ( LogicBelief b : beliefs ) {
 			neighbors.add(b.getParameters().firstElement());
 		}
-		
+
 		if ( neighbors.size() == 0 ) {
 			println("strangely I do not know any neighbors");
 			return Util.skipAction();
 		}
-		
+
 		// goto neighbors
 		Collections.shuffle(neighbors);
 		String neighbor = neighbors.firstElement();
 		println("I will go to " + neighbor);
 		return Util.gotoAction(neighbor);
-		
+
 	}
 
 }

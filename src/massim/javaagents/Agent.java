@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
+import massim.javaagents.agents2011.Util;
+
 import apltk.interpreter.data.Belief;
 import apltk.interpreter.data.Goal;
 import apltk.interpreter.data.LogicBelief;
@@ -40,6 +42,8 @@ public abstract class Agent {
 
 	// the name of the agent. supposed to be unique (ensured by the constructor).
 	private String name;
+	
+	private static Util util;
 	
 	// the team of the agent. this is required for comminication.
 	private String team;
@@ -78,6 +82,8 @@ public abstract class Agent {
 		
 		agentsTeams.put(name, team);
 		
+		
+		
 	}
 
 	/**
@@ -106,7 +112,7 @@ public abstract class Agent {
 	 * @return an agent-instance 
 	 */
 	static public Agent createAgentFromClass(String agentName, String team, String agentClass) {
-	
+		util=new Util();
 		// 1. retrieve a class loader
 		ClassLoader classLoader = Agent.class.getClassLoader();
 
@@ -117,6 +123,7 @@ public abstract class Agent {
 	        System.out.println("instance of \"" + aClass.getName() + "\" created");
 	    } catch (ClassNotFoundException e) {
 	        e.printStackTrace();
+	        util.log(e.getMessage());
 	    }
 
 		// 3.  get an instance of the class
@@ -127,6 +134,7 @@ public abstract class Agent {
 			ret = (Agent)(c.newInstance(agentName,team));
 		} catch (Exception e) {
 			System.out.println(e);
+			util.log(e.getMessage());
 			//throw new IOException("Class \"" + mainClass + "\" could not be loaded from \"" + file + "\"", e);
 			assert false:e;
 			return null;
@@ -232,10 +240,12 @@ public abstract class Agent {
 		} catch (PerceiveException e) {
 			//e.printStackTrace();
 			println("error perceiving \"" + e.getMessage() + "\"");	
+			util.log(e.getMessage());
 			return new LinkedList<Percept>();
 		} catch (NoEnvironmentException e) {
 			//e.printStackTrace();
 			println("error perceiving \"" + e.getMessage() + "\"");	
+			util.log(e.getMessage());
 			return new LinkedList<Percept>();
 		}
 		
