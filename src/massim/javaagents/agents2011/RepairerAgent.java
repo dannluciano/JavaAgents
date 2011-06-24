@@ -29,25 +29,26 @@ public class RepairerAgent extends Agent {
 		
 		Action act = null;
 		
-		// 1. reparar
-		act = planRepair(); 
-		if ( act != null ) return act;
-	    
-		//2. recarregar
+		// 1. recarregar
 		act = planRecharge();
 		if ( act != null ) return act;
-       
-		// 3. Defender
-		act = planDefender();
+	    
+		//2. repara ainda precisa melhorar.
+		
+		act = planRepair(); 
 		if ( act != null ) return act;
 		
+		// 3. Defender
+		//act = planDefender();
+		//if ( act != null ) return act;
+		
 		// 4. Andar
-		act = planRandomWalk();
-		if ( act != null ) return act;		  
+		//act = planRandomWalk();
+		//if ( act != null ) return act;		  
 
 		//4. buying battery with a certain probability
-		act = planBuyBattery();
-		if ( act != null ) return act;
+		//act = planBuyBattery();
+		//if ( act != null ) return act;
 		
 		// 5. probing if necessary , pode ser implementado somente no explorer ou no agente inspetor
 		//act = planProbe();
