@@ -6,5 +6,6 @@
 	<classpathentry kind="lib" path="lib/eis-0.3.jar"/>
 	<classpathentry kind="lib" path="lib/eismassim-1.0.jar"/>
 	<classpathentry kind="lib" path="lib/junit-3.8.1.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
