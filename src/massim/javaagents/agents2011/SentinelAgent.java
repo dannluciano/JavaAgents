@@ -14,11 +14,12 @@ import massim.javaagents.Agent;
 
 public class SentinelAgent extends Agent {
 
+	private int myHealth=1;
+
 	public SentinelAgent(String name, String team) {
 		super(name, team);
 	}
 
-	@Override
 	public void handlePercept(Percept p) {
 	}
 
@@ -32,27 +33,35 @@ public class SentinelAgent extends Agent {
 
 		// 1. recharging
 		act = planRecharge();
+		if ( act != null ) return act;		
+		
+		act=planBuyShield();
+		if (act!=null) return act;
+		
+		// 3.Parry if necessary
+		act=planParry();
+		if(act!=null) return act;
+
+		// 2. surveying if necessary
+		act = planSurvey();
 		if ( act != null ) return act;
 		
-		// 2. buying battery with a certain probability
+
+		// 4. buying battery with a certain probability
 		act = planBuyBattery();
 		if ( act != null ) return act;
 
-		// 3. surveying if necessary
-		act = planSurvey();
-		if ( act != null ) return act;
-				
-		// 4. (almost) random walking
+		// 5. (almost) random walking
 		act = planRandomWalk();
 		if ( act != null ) return act;
 
 		return Util.skipAction();
-		
+
 	}
 
 
 	private void handleMessages() {
-		
+
 		// handle messages... believe everything the others say
 		Collection<Message> messages = getMessages();
 		for ( Message msg : messages ) {
@@ -71,14 +80,14 @@ public class SentinelAgent extends Agent {
 				println("but I am not interested in that gibberish");
 			}
 		}
-		
+
 	}
 
 	private void handlePercepts() {
 
 		String position = null;
 		Vector<String> neighbors = new Vector<String>();
-		
+
 		// check percepts
 		Collection<Percept> percepts = getAllPercepts();
 		//if ( gatherSpecimens ) processSpecimens(percepts);
@@ -158,7 +167,7 @@ public class SentinelAgent extends Agent {
 				println("reached achievement " + p);
 			}
 		}
-		
+
 		// again for checking neighbors
 		this.removeBeliefs("neighbor");
 		for ( Percept p : percepts ) {
@@ -173,21 +182,33 @@ public class SentinelAgent extends Agent {
 		}	
 	}
 
+	private Action planParry(){		
+		Collection<Percept> percepts=getAllPercepts();
+		for (Percept p:percepts){
+			if ( p.getName().equals("health")) {
+				Integer health = new Integer(p.getParameters().get(0).toString());
+				if(health-myHealth<0)
+				return Util.parryAction();
+			}
+		}
+		return null;
+	}
+
 	private Action planRecharge() {
 
 		LinkedList<LogicBelief> beliefs = null;
-		
+
 		beliefs =  getAllBeliefs("energy");
 		if ( beliefs.size() == 0 ) {
-				println("strangely I do not know my energy");
-				return Util.skipAction();
+			println("strangely I do not know my energy");
+			return Util.skipAction();
 		}		
 		int energy = new Integer(beliefs.getFirst().getParameters().firstElement()).intValue();
 
 		beliefs =  getAllBeliefs("maxEnergy");
 		if ( beliefs.size() == 0 ) {
-				println("strangely I do not know my maxEnergy");
-				return Util.skipAction();
+			println("strangely I do not know my maxEnergy");
+			return Util.skipAction();
 		}		
 		int maxEnergy = new Integer(beliefs.getFirst().getParameters().firstElement()).intValue();
 
@@ -204,15 +225,15 @@ public class SentinelAgent extends Agent {
 		}
 		// go to recharge mode if necessary
 		else {
-			if ( energy < maxEnergy / 4 ) {
+			if ( energy < maxEnergy / 3 ) {
 				println("I need to recharge");
 				goals.add(new LogicGoal("beAtFullCharge"));
 				return Util.rechargeAction();
 			}
 		}	
-		
+
 		return null;
-		
+
 	}
 
 	private Action planSurvey() {
@@ -225,22 +246,22 @@ public class SentinelAgent extends Agent {
 		LinkedList<LogicBelief> surveyed = getAllBeliefs("surveyedEdge");
 
 		String position = getAllBeliefs("position").get(0).getParameters().firstElement();
-		
+
 		int unsurveyedNum = 0;
 		int adjacentNum = 0;
-		
+
 		for ( LogicBelief v : visible ) {
-		
+
 			String vVertex0 = v.getParameters().elementAt(0);
 			String vVertex1 = v.getParameters().elementAt(1);
 
 			boolean adjacent = false;
 			if ( vVertex0.equals(position) || vVertex1.equals(position) )
 				adjacent = true;
-			
+
 			if ( adjacent == false) continue;
 			adjacentNum ++;
-			
+
 			boolean isSurveyed = false;
 			for ( LogicBelief s : surveyed ) {
 				String sVertex0 = s.getParameters().elementAt(0);
@@ -255,47 +276,70 @@ public class SentinelAgent extends Agent {
 				}
 			}
 			if ( isSurveyed == false ) unsurveyedNum ++;
-			
+
 		}
 
 		println("" + unsurveyedNum + " out of " + adjacentNum + " adjacent edges are unsurveyed");
-		
+
 		if ( unsurveyedNum > 0 ) {
 			println("I will survey");
 			return Util.surveyAction();
 		}
-		
+
 		return null;
-		
+
 	}
-	
+
 	/**
 	 * Buy a battery with a given probability
 	 * @return
 	 */
 	private Action planBuyBattery() {
-		
+
 		LinkedList<LogicBelief> beliefs = this.getAllBeliefs("money");
 		if ( beliefs.size() == 0 ) {
 			println("strangely I do not know our money.");
 			return null;
 		}
-		
+
 		LogicBelief moneyBelief = beliefs.get(0);
 		int money = new Integer(moneyBelief.getParameters().get(0)).intValue();
-		
+
 		if ( money < 10 ) {
 			println("we do not have enough money.");
 			return null;
 		}
 		println("we do have enough money.");
-		
+
 		println("I am going to buy a battery");
-		
+
 		return Util.buyAction("battery");
-		
+
 	}
 	
+	private Action planBuyShield() {
+
+		LinkedList<LogicBelief> beliefs = this.getAllBeliefs("money");
+		if ( beliefs.size() == 0 ) {
+			println("strangely I do not know our money.");
+			return null;
+		}
+
+		LogicBelief moneyBelief = beliefs.get(0);
+		int money = new Integer(moneyBelief.getParameters().get(0)).intValue();
+
+		if ( money < 10 || myHealth==3) {
+			println("we do not have enough money or we have enough health.");
+			return null;
+		}
+		println("we do have enough money.");
+
+		println("I am going to buy a shield");
+
+		return Util.buyAction("shield");
+
+	}
+
 	private Action planRandomWalk() {
 
 		LinkedList<LogicBelief> beliefs = getAllBeliefs("neighbor");
@@ -303,18 +347,17 @@ public class SentinelAgent extends Agent {
 		for ( LogicBelief b : beliefs ) {
 			neighbors.add(b.getParameters().firstElement());
 		}
-		
+
 		if ( neighbors.size() == 0 ) {
 			println("strangely I do not know any neighbors");
 			return Util.skipAction();
 		}
-		
+
 		// goto neighbors
 		Collections.shuffle(neighbors);
 		String neighbor = neighbors.firstElement();
 		println("I will go to " + neighbor);
 		return Util.gotoAction(neighbor);
-		
-	}
 
+	}
 }
