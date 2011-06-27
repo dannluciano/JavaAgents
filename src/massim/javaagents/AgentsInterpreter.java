@@ -369,7 +369,7 @@ public class AgentsInterpreter implements Interpreter,AgentListener,EnvironmentL
 		boolean delay = true; // TODO move to config
 		if ( delay == true) {
 			try {
-				Thread.sleep(60*1000);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 			}
 		}
