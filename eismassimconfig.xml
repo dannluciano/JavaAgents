@@ -22,6 +22,6 @@
     <entity name="connectionB9" username="b9" password="1" xml="yes"/>
     <entity name="connectionB10" username="b10" password="1" xml="yes"/>
   </entities>
-  <logger toTerminal="yes" toFile="yes" toFiles="yes"/>
+  <logger toTerminal="yes" toFile="yes" toFiles="yes"></logger>
   <backup file="backup1.xml"/>
 </interfaceConfig>
