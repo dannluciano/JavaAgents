@@ -231,7 +231,7 @@ public class InspectorAgent extends Agent {
 	private Action planInspect() {
 
 		LinkedList<LogicBelief> beliefs = null;
-		LinkedList<LogicBelief> enemies=null;
+		LinkedList<LogicBelief> enemies = new LinkedList<LogicBelief>();
 
 		// determine adjacent vertices including the current position
 		Vector<String> vertices = new Vector<String>();
