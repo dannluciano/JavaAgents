@@ -231,7 +231,7 @@ public class InspectorAgent extends Agent {
 	private Action planInspect() {
 
 		LinkedList<LogicBelief> beliefs = null;
-		//LinkedList<LogicBelief> enemies=null;
+		LinkedList<LogicBelief> enemies= new LinkedList<LogicBelief>();
 
 		// determine adjacent vertices including the current position
 		Vector<String> vertices = new Vector<String>();
@@ -272,10 +272,10 @@ public class InspectorAgent extends Agent {
 		println("there are " + adjacentNum + " visible opponents that I could inspect");
 		/*Como tem inimigos no vertice, eu chamarei os sabotadores para atacar
 		 O sabotador tem que ver no handleBeliefs se ele tiver uma cren�a de inimigo, ele deve atacar*/
-	/*	if(enemies!=null){
+	if(enemies!=null){
 			for(LogicBelief enemy: enemies)
 				broadcastBelief(enemy);
-		}*/
+		}
 		println("I will inspect");
 		return Util.inspectAction();
 	}
