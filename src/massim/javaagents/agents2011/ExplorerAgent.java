@@ -289,7 +289,10 @@ public class ExplorerAgent extends Agent {
 		// get all neighbors
 		LinkedList<LogicBelief> visible = getAllBeliefs("visibleEdge");
 		LinkedList<LogicBelief> surveyed = getAllBeliefs("surveyedEdge");
-
+		LinkedList<LogicBelief> enemies= new LinkedList<LogicBelief>();
+		
+		String myTeam = getTeam();
+		Vector<String> vertices = new Vector<String>();
 		String position = getAllBeliefs("position").get(0).getParameters().firstElement();
 		
 		int unsurveyedNum = 0;
@@ -304,9 +307,24 @@ public class ExplorerAgent extends Agent {
 			if ( vVertex0.equals(position) || vVertex1.equals(position) )
 				adjacent = true;
 			
+			String pos = v.getParameters().get(1);
+			String team = getTeam();
+			
 			if ( adjacent == false) continue;
 			adjacentNum ++;
 			
+			if ( myTeam.equals(team) ) continue;
+
+			// not adjacent
+			if ( vertices.contains(pos) == false ) continue;
+			adjacentNum ++;			
+			enemies.add(Util.createBelief("enemy",pos));		
+            
+			if(enemies!=null){
+				for(LogicBelief enemy: enemies)
+					broadcastBelief(enemy);
+			}
+						
 			boolean isSurveyed = false;
 			for ( LogicBelief s : surveyed ) {
 				String sVertex0 = s.getParameters().elementAt(0);
@@ -350,7 +368,7 @@ public class ExplorerAgent extends Agent {
 		LogicBelief moneyBelief = beliefs.get(0);
 		int money = new Integer(moneyBelief.getParameters().get(0)).intValue();
 		
-		if ( money < 5 ) {
+		if ( money < 10 ) {
 			println("we do not have enough money.");
 			return null;
 		}
@@ -361,10 +379,22 @@ public class ExplorerAgent extends Agent {
 		//	println("I am not going to buy a battery");
 		//	return null;
 		//}
-		println("I am going to buy a battery");
 		
-		return Util.buyAction("battery");
-		
+		int flag = ((int)Math.random() % 12);
+		switch (flag) {
+		case 0:
+			println("I am going to buy a battery");
+			return Util.buyAction("battery");
+		case 1:
+			println("I am going to buy a sensor");
+			return Util.buyAction("sensor");
+		case 2:
+			println("I am going to buy a shield");
+			return Util.buyAction("shield");
+		default:
+			break;
+		}
+		return null;	
 	}
 	
 	private Action planRandomWalk() {

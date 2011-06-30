@@ -22,12 +22,15 @@ public class RepairerAgent extends Agent {
 
 	@Override
 	public void handlePercept(Percept p) {
+	
 	}
 
 	@Override
 	public Action step() {
 		
 		Action act = null;
+		
+		handlePercepts();
 		
 		// 1. recarregar
 		act = planRecharge();
@@ -42,13 +45,16 @@ public class RepairerAgent extends Agent {
 		//act = planDefender();
 		//if ( act != null ) return act;
 		
+		act = planBuyBattery();
+		if ( act != null ) return act;
+		
 		// 4. Andar
-		//act = planRandomWalk();
-		//if ( act != null ) return act;		  
+		//
+		act = planRandomWalk();
+		if ( act != null ) return act;		  
 
 		//4. buying battery with a certain probability
-		//act = planBuyBattery();
-		//if ( act != null ) return act;
+		
 		
 		// 5. probing if necessary , pode ser implementado somente no explorer ou no agente inspetor
 		//act = planProbe();
@@ -60,6 +66,110 @@ public class RepairerAgent extends Agent {
 		
 		return Util.skipAction();
 	}				
+
+	
+	
+	private void handlePercepts() {
+
+		String position = null;
+		Vector<String> neighbors = new Vector<String>();
+		
+		// check percepts
+		Collection<Percept> percepts = getAllPercepts();
+		//if ( gatherSpecimens ) processSpecimens(percepts);
+		removeBeliefs("visibleEntity");
+		removeBeliefs("visibleEdge");
+		for ( Percept p : percepts ) {
+			if ( p.getName().equals("step") ) {
+				println(p);
+			}
+			else if ( p.getName().equals("visibleEntity") ) {
+				LogicBelief b = Util.perceptToBelief(p);
+				if ( containsBelief(b) == false ) {
+					addBelief(b);
+				}
+				else {
+				}
+			}
+			else if ( p.getName().equals("visibleEdge") ) {
+				LogicBelief b = Util.perceptToBelief(p);
+				if ( containsBelief(b) == false ) {
+					addBelief(b);
+				}
+				else {
+				}
+			}
+			else if ( p.getName().equals("probedVertex") ) {
+				LogicBelief b = Util.perceptToBelief(p);
+				if ( containsBelief(b) == false ) {
+					println("I perceive the value of a vertex that I have not known before");
+					addBelief(b);
+					broadcastBelief(b);
+				}
+				else {
+					//println("I already knew " + b);
+				}
+			}
+			else if ( p.getName().equals("surveyedEdge") ) {
+				LogicBelief b = Util.perceptToBelief(p);
+				if ( containsBelief(b) == false ) {
+					println("I perceive the weight of an edge that I have not known before");
+					addBelief(b);
+					broadcastBelief(b);
+				}
+				else {
+					//println("I already knew " + b);
+				}
+			}
+			else if ( p.getName().equals("health")) {
+				Integer health = new Integer(p.getParameters().get(0).toString());
+				println("my health is " +health );
+				if ( health.intValue() == 0 ) {
+					println("my health is zero. asking for help");
+					broadcastBelief(new LogicBelief("iAmDisabled"));
+						
+				}
+			}
+			else if ( p.getName().equals("position") ) {
+				position = p.getParameters().get(0).toString();
+				removeBeliefs("position");
+				addBelief(new LogicBelief("position",position));
+				
+			}
+			else if ( p.getName().equals("energy") ) {
+				Integer energy = new Integer(p.getParameters().get(0).toString());
+				removeBeliefs("energy");
+				addBelief(new LogicBelief("energy",energy.toString()));
+			}
+			else if ( p.getName().equals("maxEnergy") ) {
+				Integer maxEnergy = new Integer(p.getParameters().get(0).toString());
+				removeBeliefs("maxEnergy");
+				addBelief(new LogicBelief("maxEnergy",maxEnergy.toString()));
+			}
+			else if ( p.getName().equals("money") ) {
+				Integer money = new Integer(p.getParameters().get(0).toString());
+				removeBeliefs("money");
+				addBelief(new LogicBelief("money",money.toString()));
+			}
+			else if ( p.getName().equals("achievement") ) {
+				println("reached achievement " + p);
+			}
+		}
+		
+		// again for checking neighbors
+		this.removeBeliefs("neighbor");
+		for ( Percept p : percepts ) {
+			if ( p.getName().equals("visibleEdge") ) {
+				String vertex1 = p.getParameters().get(0).toString();
+				String vertex2 = p.getParameters().get(1).toString();
+				if ( vertex1.equals(position) ) 
+					addBelief(new LogicBelief("neighbor",vertex2));
+				if ( vertex2.equals(position) ) 
+					addBelief(new LogicBelief("neighbor",vertex1));
+			}
+		}	
+	}
+
 	
 	
 	private Action planRepair(){ /*if ( rechargeSteps > 0 ) {
@@ -87,11 +197,11 @@ public class RepairerAgent extends Agent {
 		Collection<Percept> percepts = getAllPercepts();
 		String position = null;
 		for ( Percept p : percepts ) {
-			if ( p.getName().equals("lastActionResult") && p.getParameters().get(0).toProlog().equals("failed") ) {
+			/*if ( p.getName().equals("lastActionResult") && p.getParameters().get(0).toProlog().equals("failed") ) {
 				println("my previous action has failed. recharging...");
-				rechargeSteps = 10;
+				rechargeSteps = 2;
 				return Util.skipAction();
-			} 
+			} */
 			if ( p.getName().equals("position") ) {
 				position = p.getParameters().get(0).toString();
 			}
@@ -104,7 +214,7 @@ public class RepairerAgent extends Agent {
 				String eName = p.getParameters().get(0).toString();
 				if ( ePos.equals(position) && needyAgents.contains(eName) ) {
 					println("I am going to repair " + eName);
-					Util.repairAction(eName);
+					return Util.repairAction(eName);
 					
 				}
 			}
@@ -127,7 +237,7 @@ public class RepairerAgent extends Agent {
 				String eName = p.getParameters().get(0).toString();
 				if ( neighbors.contains(ePos) && needyAgents.contains(eName) ) {
 					println("I am going to repair " + eName + ". move to " + ePos +" first.");
-					Util.gotoAction(ePos);
+					return Util.gotoAction(ePos);
 				}
 			}
 		}
@@ -150,14 +260,14 @@ public class RepairerAgent extends Agent {
 		
 		beliefs =  getAllBeliefs("energy");
 		if ( beliefs.size() == 0 ) {
-				println("strangely I do not know my energy");
+				println("strangely I do not know my energy ISAAC");
 				return Util.skipAction();
 		}		
 		int energy = new Integer(beliefs.getFirst().getParameters().firstElement()).intValue();
 
 		beliefs =  getAllBeliefs("maxEnergy");
 		if ( beliefs.size() == 0 ) {
-				println("strangely I do not know my maxEnergy");
+				println("strangely I do not know my maxEnergy DANN");
 				return Util.skipAction();
 		}		
 		int maxEnergy = new Integer(beliefs.getFirst().getParameters().firstElement()).intValue();
@@ -167,6 +277,7 @@ public class RepairerAgent extends Agent {
 			if ( maxEnergy == energy ) {
 				println("I can stop recharging. I am at full charge");
 				removeGoals("beAtFullCharge");
+				return planRandomWalk();
 			}
 			else {
 				println("recharging...");
@@ -175,7 +286,7 @@ public class RepairerAgent extends Agent {
 		}
 		// go to recharge mode if necessary
 		else {
-			if ( energy < maxEnergy / 4 ) {
+			if ( energy < maxEnergy / 3 ) {
 				println("I need to recharge");
 				goals.add(new LogicGoal("beAtFullCharge"));
 				return Util.rechargeAction();
@@ -412,7 +523,8 @@ private Action planDefender() {
 		LogicBelief moneyBelief = beliefs.get(0);
 		int money = new Integer(moneyBelief.getParameters().get(0)).intValue();
 		
-		if ( money < 5 ) {
+		
+		if ( money < 10 ) {
 			println("we do not have enough money.");
 			return null;
 		}
@@ -423,10 +535,20 @@ private Action planDefender() {
 		//	println("I am not going to buy a battery");
 		//	return null;
 		//}
-		println("I am going to buy a battery");
+		int flag = ((int)Math.random() % 10);
+		println("flag reparador"+flag);
+		switch (flag) {
 		
-		return Util.buyAction("battery");
-		
+		case 0:
+			println("I am going to buy a battery");
+			return Util.buyAction("battery");
+		case 2:
+			println("I am going to buy a shield");
+			return Util.buyAction("shield");
+		default:
+			break;
+		}
+		return null;
 	}
 	
 	
